@@ -1,0 +1,96 @@
+package org.example;
+import java.util.Random;
+import java.util.Scanner;
+import com.twilio.Twilio;
+import com.twilio.rest.api.v2010.account.Message;
+import com.twilio.type.PhoneNumber;
+
+public class Main {
+    // Replace with your actual SID and Token
+    public static final String ACCOUNT_SID = "";
+    public static final String AUTH_TOKEN = "";
+
+    public static void main(String[] args)
+    {
+        arduinoRun run = new arduinoRun();
+        run.startLoop(); // Now it keeps running till user enters 11
+    }
+}
+
+
+class arduinoRun {
+    Scanner scanner = new Scanner(System.in);
+    Random random = new Random();
+
+    public void startLoop() {
+        System.out.println("Welcome to the Arduino Uno project!!!");
+
+        int choice;
+
+        while (true) {
+            System.out.print("\nYou can enter 11 to stop the reading...");
+            choice = scanner.nextInt();
+
+            if (choice == 11) {
+                System.out.println("Exiting... Goodbye!");
+                break;
+            }
+
+            if (choice >= 1 && choice <= 9) {
+                int[] array1 = new int[3];
+                int[] array2 = new int[3];
+                fillArrays(choice, array1, array2);
+
+                String messageText = buildMessage(array1, array2);
+                System.out.println(messageText); // Local print
+
+                sendMessage(messageText); // Send via Twilio
+            } else {
+                System.out.println("Invalid input! Try again.");
+            }
+        }
+    }
+
+    private void fillArrays(int choice, int[] array1, int[] array2) {
+        int min1 = 1, max1 = 3, min2 = 1, max2 = 3;
+
+        switch (choice) {
+            case 1 -> { min1 = 1; max1 = 3; min2 = 1; max2 = 3; }
+            case 2 -> { min1 = 1; max1 = 3; min2 = 4; max2 = 6; }
+            case 3 -> { min1 = 1; max1 = 3; min2 = 7; max2 = 10; }
+            case 4 -> { min1 = 4; max1 = 6; min2 = 1; max2 = 3; }
+            case 5 -> { min1 = 4; max1 = 6; min2 = 4; max2 = 6; }
+            case 6 -> { min1 = 4; max1 = 6; min2 = 7; max2 = 10; }
+            case 7 -> { min1 = 7; max1 = 10; min2 = 1; max2 = 3; }
+            case 8 -> { min1 = 7; max1 = 10; min2 = 4; max2 = 6; }
+            case 9 -> { min1 = 7; max1 = 10; min2 = 7; max2 = 10; }
+        }
+
+        for (int i = 0; i < 3; i++) {
+            array1[i] = random.nextInt(max1 - min1 + 1) + min1;
+            array2[i] = random.nextInt(max2 - min2 + 1) + min2;
+        }
+    }
+
+    private String buildMessage(int[] array1, int[] array2) {
+        StringBuilder result = new StringBuilder();
+        result.append("soil sensor level:");
+        for (int val : array1)
+            result.append(val).append(" ");
+        result.append("\nWater sensor level:");
+        for (int val : array2)
+            result.append(val).append(" ");
+        return result.toString();
+    }
+
+    private void sendMessage(String messageText) {
+        Twilio.init(Main.ACCOUNT_SID, Main.AUTH_TOKEN);
+        Message message = Message.creator(
+                new PhoneNumber("whatsapp:+916005933715"),  // TO
+                new PhoneNumber("whatsapp:+14155238886"),   // FROM
+                messageText
+        ).create();
+
+        System.out.println("Message sent! SID: " + message.getSid());
+    }
+}
